@@ -62,9 +62,21 @@ export default async function PlayPage({ params }: Props) {
   let resolvedRomUrl = game.rom_url
   if (game.rom_url?.includes('archive.org')) {
     try {
-      const res = await fetch(game.rom_url, { method: 'HEAD', redirect: 'follow' })
-      if (res.url) resolvedRomUrl = res.url
-    } catch {}
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 5000)
+      const res = await fetch(game.rom_url, { 
+        method: 'HEAD', 
+        redirect: 'follow',
+        signal: controller.signal
+      })
+      clearTimeout(timeout)
+      if (res.url && res.url !== game.rom_url) {
+        resolvedRomUrl = res.url
+        console.log('Resolved ROM URL:', resolvedRomUrl)
+      }
+    } catch (e) {
+      console.error('Failed to resolve ROM URL:', e)
+    }
   }
 
   return (
