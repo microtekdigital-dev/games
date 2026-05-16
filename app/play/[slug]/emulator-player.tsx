@@ -87,17 +87,9 @@ export function EmulatorPlayer({ game, userId, initialFavorite }: EmulatorPlayer
     window.EJS_player = '#game-container'
     window.EJS_core = game.console?.emulator_core || 'fceumm'
 
-    // Resolve archive.org redirects before passing to emulator
+    // URL already resolved server-side, use directly
     const resolveRomUrl = async () => {
-      let romUrl = game.rom_url
-      if (game.rom_url.includes('archive.org')) {
-        try {
-          const res = await fetch(`/api/resolve-url?url=${encodeURIComponent(game.rom_url)}`)
-          const data = await res.json()
-          if (data.url) romUrl = data.url
-        } catch {}
-      }
-      window.EJS_gameUrl = romUrl
+      window.EJS_gameUrl = game.rom_url
       window.EJS_gameName = game.title
       window.EJS_color = consoleColor
       window.EJS_startOnLoaded = true

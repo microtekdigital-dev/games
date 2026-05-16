@@ -58,9 +58,18 @@ export default async function PlayPage({ params }: Props) {
     isFavorite = !!favorite
   }
 
+  // Resolve archive.org redirects server-side
+  let resolvedRomUrl = game.rom_url
+  if (game.rom_url?.includes('archive.org')) {
+    try {
+      const res = await fetch(game.rom_url, { method: 'HEAD', redirect: 'follow' })
+      if (res.url) resolvedRomUrl = res.url
+    } catch {}
+  }
+
   return (
     <EmulatorPlayer 
-      game={game} 
+      game={{ ...game, rom_url: resolvedRomUrl }} 
       userId={user?.id} 
       initialFavorite={isFavorite}
     />
