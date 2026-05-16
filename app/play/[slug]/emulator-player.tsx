@@ -86,30 +86,36 @@ export function EmulatorPlayer({ game, userId, initialFavorite }: EmulatorPlayer
     // Set up EmulatorJS configuration BEFORE loading the script
     window.EJS_player = '#game-container'
     window.EJS_core = game.console?.emulator_core || 'fceumm'
-    window.EJS_gameUrl = game.rom_url
-    window.EJS_gameName = game.title
-    window.EJS_color = consoleColor
-    window.EJS_startOnLoaded = true
-    window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/'
-    window.EJS_VirtualGamepadSettings = { enabled: true }
-    // Detect mobile for optimized touch controls
-    window.EJS_mobileOptimized = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
 
-    window.EJS_ready = () => setIsLoading(false)
-    window.EJS_onGameStart = () => setIsLoading(false)
+    // Resolve archive.org redirects before passing to emulator
+    const resolveRomUrl = async () => {
+      let romUrl = game.rom_url
+      if (game.rom_url.includes('archive.org')) {
+        try {
+          const res = await fetch(`/api/resolve-url?url=${encodeURIComponent(game.rom_url)}`)
+          const data = await res.json()
+          if (data.url) romUrl = data.url
+        } catch {}
+      }
+      window.EJS_gameUrl = romUrl
+      window.EJS_gameName = game.title
+      window.EJS_color = consoleColor
+      window.EJS_startOnLoaded = true
+      window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/'
+      window.EJS_VirtualGamepadSettings = { enabled: true }
+      window.EJS_mobileOptimized = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
+      window.EJS_ready = () => setIsLoading(false)
+      window.EJS_onGameStart = () => setIsLoading(false)
 
-    // Small delay to ensure the DOM element is visible before EmulatorJS initializes
-    const timer = setTimeout(() => {
       const script = document.createElement('script')
       script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js'
       script.async = true
-      script.onerror = () => {
-        setError('Failed to load emulator')
-        setIsLoading(false)
-      }
+      script.onerror = () => { setError('Failed to load emulator'); setIsLoading(false) }
       scriptRef.current = script
       document.body.appendChild(script)
-    }, 100)
+    }
+
+    const timer = setTimeout(resolveRomUrl, 100)
 
     return () => {
       clearTimeout(timer)
