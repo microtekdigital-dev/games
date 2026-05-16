@@ -86,7 +86,11 @@ export function EmulatorPlayer({ game, userId, initialFavorite }: EmulatorPlayer
     // Set up EmulatorJS configuration BEFORE loading the script
     window.EJS_player = '#game-container'
     window.EJS_core = game.console?.emulator_core || 'fceumm'
-    window.EJS_gameUrl = game.rom_url
+    // Proxy archive.org URLs to avoid CORS issues
+    const romUrl = game.rom_url.includes('archive.org')
+      ? `/api/rom-proxy?url=${encodeURIComponent(game.rom_url)}`
+      : game.rom_url
+    window.EJS_gameUrl = romUrl
     window.EJS_gameName = game.title
     window.EJS_color = consoleColor
     window.EJS_startOnLoaded = true
