@@ -60,6 +60,7 @@ export default async function PlayPage({ params }: Props) {
 
   // Resolve archive.org redirects server-side
   let resolvedRomUrl = game.rom_url
+  console.log('ROM URL from DB:', game.rom_url)
   if (game.rom_url?.includes('archive.org')) {
     try {
       const controller = new AbortController()
